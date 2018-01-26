@@ -49,12 +49,12 @@ hal_document = Document(
     url=u'/orders',
     title='',
     content={
-        u'admin': [
+        u'http://example.com/docs/rels/admin': [
             Link(url=u'/admins/2'),
             Link(url=u'/admins/5')
         ],
         u'currentlyProcessing': 14,
-        u'order': [
+        u'http://example.com/docs/rels/order': [
             Document(
                 url=u'/orders/123',
                 title='',
@@ -62,8 +62,8 @@ hal_document = Document(
                     u'currency': u'USD',
                     u'status': u'shipped',
                     u'total': 30.0,
-                    u'basket': Link(url=u'/baskets/98712'),
-                    u'customer': Link(url=u'/customers/7809')
+                    u'http://example.com/docs/rels/basket': Link(url=u'/baskets/98712'),
+                    u'http://example.com/docs/rels/customer': Link(url=u'/customers/7809')
                 }
             ),
             Document(
@@ -73,13 +73,13 @@ hal_document = Document(
                     u'currency': u'USD',
                     u'status': u'processing',
                     u'total': 20.0,
-                    u'basket': Link(url=u'/baskets/97213'),
-                    u'customer': Link(url=u'/customers/12369')
+                    u'http://example.com/docs/rels/basket': Link(url=u'/baskets/97213'),
+                    u'http://example.com/docs/rels/customer': Link(url=u'/customers/12369')
                 }
             )
         ],
         u'shippedToday': 20,
-        u'find': Link(url=u'/orders{?id}', fields=[Field(u'id', location='path')]),
+        u'http://example.com/docs/rels/find': Link(url=u'/orders{?id}', fields=[Field(u'id', location='path')]),
         u'next': Link(url=u'/orders?page=2')
     }
 )

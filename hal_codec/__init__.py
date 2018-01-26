@@ -8,7 +8,7 @@ import json
 import uritemplate
 
 
-__version__ = "1.0.2"
+__version__ = "1.1.0"
 
 
 def _get_string(item, key):
@@ -127,19 +127,16 @@ def _parse_link(data, base_url=None):
     return Link(url=url, fields=fields)
 
 
-def _map_to_coreapi_key(key):
-    # HAL uses 'rel' values to index links and nested resources.
-    if key.startswith('http://') or key.startswith('https://'):
-        # Fully qualified URL - just use last portion of the path.
-        return urlparse.urlsplit(key).path.split('/')[-1]
-    elif ':' in key:
-        # A curried 'rel' value. Use the named portion.
-        return key.split(':', 1)[1]
-    # A reserved 'rel' value, such as "next".
+def _map_to_coreapi_key(key, curies):
+    if ':' in key:
+        prefix, suffix = key.split(':', 1)
+        curie = curies.get(prefix)
+        if curie is not None and curie['templated'] is True:
+            key = uritemplate.expand(curie['href'], rel=suffix)
     return key
 
 
-def _parse_document(data, base_url=None):
+def _parse_document(data, base_url=None, curies=None):
     links = _get_dict(data, '_links')
     embedded = _get_dict(data, '_embedded')
 
@@ -149,12 +146,19 @@ def _parse_document(data, base_url=None):
     title = _get_string(self, 'title')
 
     content = {}
+    if curies is None:
+        curies = {}
+
+    if 'curies' in links:
+        for curie in links['curies']:
+            curies[curie['name']] = curie
 
     for key, value in links.items():
+
         if key in ('self', 'curies'):
             continue
 
-        key = _map_to_coreapi_key(key)
+        key = _map_to_coreapi_key(key, curies)
 
         if isinstance(value, list):
             if value and 'name' in value[0]:
@@ -176,11 +180,12 @@ def _parse_document(data, base_url=None):
 
     # Embedded resources.
     for key, value in embedded.items():
-        key = _map_to_coreapi_key(key)
+        key = _map_to_coreapi_key(key, curies)
         if isinstance(value, list):
-            content[key] = [_parse_document(item, base_url=url) for item in value]
+            content[key] = [_parse_document(item, base_url=url, curies=curies)
+                            for item in value]
         elif isinstance(value, dict):
-            content[key] = _parse_document(value, base_url=url)
+            content[key] = _parse_document(value, base_url=url, curies=curies)
 
     # Data.
     for key, value in data.items():
